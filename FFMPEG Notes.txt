@@ -1,0 +1,68 @@
+Lecture 18 
+•17:00 starts talking about decode function
+    •in cooldec.c there is 'void *data' which is intended to pointing to an AVFrame 'AVFrame *pic' so 'pic = data'
+    •Create a picutre buffer of the appropriate size 'result = ff_get_buffer(avctx, pic, 0)'
+    •Set pixel data 'pic->data[0][y*pic->lineszie[0]+x*3 + b] = bytestream_get_byte(&input_data)' (20:30)
+        •bytestream_get_byte(&input_data) would be set to whatever color you want to make your pixel
+        •Getting a byte out of the file and moving it into the AVFrame
+        •Loop 3 times for each byte (red, blue and green)
+    •You will use a codec to decode your image (20-30 lines to get it all done)
+    •AVPacket represents bytes from a file
+    •AVFrame represents one frame of audio / video, or one image
+    •AVCodec is a struct that defines a codec / capabilities
+    •AVCodecContext - encoding / decoding often needs a state. Since there are no codec 'objects', the state is held in structures of this type
+    •AVCodec and AVCodecContext are used to help convert a packet to a frame or a frame to a packet
+    •AVPixelFormat - Color format indentifier (byte order, type) ***converts it into something more useful***
+
+•27:00 decode_video.capabilities
+    • find the MPEG-1 video decoder function has a helper function to find the correct decoder  
+        •avcodec_find_decoder(***type of codec you need, the particular codec ID***)
+        •avcodec_alloc_context3(***codec***)
+        •avcodec_open2(***params***)
+
+•31:00 stages you work towards
+
+•32:50 test code to compile
+    •
+    #include <iostream>
+    
+    extern "C"
+    {
+        #include <libavutil/frame.h>
+    }
+
+    int main()
+    {
+        std::cout << "Hello" << std::endl;
+
+        AVFrame *temp;
+
+        temp = NULL;
+
+        return 0;
+    }
+
+
+    •docker run -it --mount type=bind,source="D:\School\CS 3505\Docker\bouncer",target="/cs3505/bouncer" myffmpeg
+    • g++ bouncer.cpp $(pkg-config --cflags --libs libavutil libavformat libavcodec libswscale)
+    • 
+        •libavcodec should be replaced with whatever you want to use
+
+• !pkg will run the last pkg command you ran - !g++ will run the last g++ command you ran
+
+
+// TO DO
+• Find the function that takes in a filename and gives us the codec ID we need so we can pass that to avcodex_find_decoder
+• For an image we can use one function instead of avcodec_send_packet & avcodec_receive_frame
+• For C avcodec_send_packet(dec_ctx, pkt) think of anything with *_ctx as 'this' and pkt is what we are getting out. So 	avcodec_receive_frame(dec_ctx, frame) we would be getting a frame out
+• Once you get to a point where you are getting a frame start printing some of the stuff out like the height and width to 	see if it looks accurate and that you have the info you need
+• We then pass the frame into sws_scale to convert it to a friendly format.
+• Print out some of the pixels to see if the colors line up with what they should be
+
+https://stackoverflow.com/questions/3527584/ffmpeg-jpeg-file-to-avframe
+
+
+orange 250 108 0 (RGB)
+
+
+ffmpeg -r 60 -f image2 -s 1920x1080 -start_number 1 -i pic%04d.png -vframes 1000 -vcodec libx264 -crf 25  -pix_fmt yuv420p test.mp4  // makefile for combining images into a .mp4
